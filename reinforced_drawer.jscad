@@ -86,7 +86,6 @@ function create_bottom_with_slot(length, width, thickness, num_pegs, peg_width, 
     let bot_fingers = union(make_pegs((length - 2 * thickness), (width + 2 * thickness), peg_width, thickness, num_pegs, kerfy));
   bot_fingers = translate([ - (length - 2 * thickness) / 2 + peg_width / 2, 0, 0], bot_fingers);
     bottom = union(bot_plate, bot_fingers);
-    bottom = union(bot_plate);
 
     let bot_finger_slots = make_peg_slots(width, length + plate_thickness + thickness + 4 * thickness, girder_width + 2 * thickness, thickness, 1, kerfy * 1, plate_thickness, girder_width);
     bot_finger_slots = rotate([0, 0, degToRad(90)], bot_finger_slots)
@@ -363,7 +362,7 @@ const back = buildBack(params, bottom, side1, side2)
 
     let side_kerf = create_side(inside_length, inside_height + 2 * material_thickness, material_thickness, kerf, plate_thickness, girder_width, side_bracket_offset);
     side1_kerf = translate([0, inside_width * 1.5, 0], side_kerf);
-    side2_kerf = translate([0, inside_width * 1.5, 0], side_kerf);
+    side2_kerf = translate([0, inside_width * 2.5, 0], side_kerf);
 
     let W = girder_width + kerf;
     let extra_offset = 0;
@@ -401,15 +400,15 @@ const back = buildBack(params, bottom, side1, side2)
         return [bottom, side1, side2, front, back, girders]
 
     } else if (model_view === 2) {
-       // back = rotate([0, degToRad(-90), 0], back)
-      //      back = translate([-inside_width * 2.5, 0, 0], back);
-      //  front = rotate([0, degToRad(-90), 0], front)
-      //      front = translate([-inside_width * 2.5, plate_width * 1.5, 0], front);
+        back2d = rotate([0, degToRad(-90), 0], back)
+        back2d = translate([-inside_width * 2.5, 0, 0], back2d);
+        front2d = rotate([0, degToRad(-90), 0], front)
+        front2d = translate([-inside_width * 2.5, plate_width * 1.5, 0], front2d);
 
-     //   girder = rotate([0, degToRad(-90), 0], girder);
-     //  girder = translate([0, -inside_width * 2.5, 0], girder);
+       girder2d = rotate([0, degToRad(-90), 0], girder);
+       girder2d = translate([0, -inside_width * 2.5, 0], girder2d);
        // return project({}, bottom_kerf, side1_kerf, side2_kerf, front, back, girders)
-       return project({}, bottom_kerf)
+       return project({}, bottom_kerf, front2d, back2d, girder2d, side1_kerf, side2_kerf)
     }
 
 }
