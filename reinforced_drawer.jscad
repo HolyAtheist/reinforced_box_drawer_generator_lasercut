@@ -241,28 +241,75 @@ function buildSideBase(params) {
     return s
 }
 
-function buildSides(params, bottom_raw) {
+function buildSides(params, bottom) {
+
     const {
-        inside_width,
+        inside_length,
         inside_height,
-        material_thickness
+        inside_width,
+        material_thickness,
+        kerf,
+        plate_thickness,
+        girder_width,
+        side_bracket_offset
     } = params
 
-    const sideBase = buildSideBase(params)
+    // --- RAW SIDES ---
+    let side1 = create_side(
+        inside_length,
+        inside_height + 2 * material_thickness,
+        material_thickness,
+        0,                      // no kerf
+        plate_thickness,
+        girder_width,
+        side_bracket_offset
+    )
+    side1 = rotate([degToRad(90), 0, 0], side1)
+    side1 = rotate([degToRad(180), 0, 0], side1)
+    side1 = translate(
+        [0, inside_width / 2 + material_thickness / 2,
+            inside_height / 2 - 2 * material_thickness],
+        side1
+    )
+    side1 = subtract(side1, bottom)
 
-    // placement offsets
-    const yOffset = inside_width / 2 + material_thickness / 2
-    const zOffset = inside_height / 2 - 2 * material_thickness
+    let side2 = translate(
+        [0, -inside_width - material_thickness, 0],
+        side1
+    )
 
-    // side1 placement + subtraction
-    let side1 = translate([0,  yOffset, zOffset], sideBase)
-    side1 = subtract(side1, bottom_raw)
+    // --- KERF SIDES ---
+    let side1k = create_side(
+        inside_length,
+        inside_height + 2 * material_thickness,
+        material_thickness,
+        kerf,                   // <--- kerf version
+        plate_thickness,
+        girder_width,
+        side_bracket_offset
+    )
+    side1k = rotate([degToRad(90), 0, 0], side1k)
+    side1k = rotate([degToRad(180), 0, 0], side1k)
+    side1k = translate(
+        [0, inside_width / 2 + material_thickness / 2,
+            inside_height / 2 - 2 * material_thickness],
+        side1k
+    )
 
-    // side2 = mirrored/shifted copy
-    let side2 = translate([0, -inside_width - material_thickness, 0], side1)
+    let side2k = translate(
+        [0, -inside_width - material_thickness, 0],
+        side1k
+    )
 
-    return { side1, side2 }
+    return {
+        side1,   // raw
+        side2,   // raw
+        side1k,  // kerf
+        side2k   // kerf
+    }
 }
+
+
 
 function buildFront(params, bottom, side1, side2) {
     let front = create_front(params.plate_width, params.plate_height, params.plate_thickness, params.plate_corner_radius);
@@ -341,9 +388,9 @@ function main(params) {
         let design_type = params.design_type
 
 
-const { bottom: bottom_raw, bottom_kerf: bottom_kerf} = buildBottoms(params)
+const { bottom_raw: bottom, bottom_kerf: bottom_kerf} = buildBottoms(params)
 
-const { side1: side1, side2: side2 } = buildSides(params, bottom)
+let { side1: side1, side2: side2, side1k: side1_kerf, side2k: side2_kerf} = buildSides(params, bottom)
 
 const front = buildFront(params, bottom, side1, side2)
 
@@ -358,11 +405,13 @@ const back = buildBack(params, bottom, side1, side2)
             colorize(colorNameToRgb(['red', 'brown', 'crimson', 'darkred'][i]), p));
 
 
-//const { side1: side1_kerf, side2: side2_kerf } = buildSides(params, bottom)
+//let { side1: side1_kerf, side2: side2_kerf } = buildSides(params, bottom)
 
-    let side_kerf = create_side(inside_length, inside_height + 2 * material_thickness, material_thickness, kerf, plate_thickness, girder_width, side_bracket_offset);
-    side1_kerf = translate([0, inside_width * 1.5, 0], side_kerf);
-    side2_kerf = translate([0, inside_width * 2.5, 0], side_kerf);
+   // let side_kerf = create_side(inside_length, inside_height + 2 * material_thickness, material_thickness, kerf, plate_thickness, girder_width, side_bracket_offset);
+   side1_kerf = rotate([degToRad(-90), 0, 0], side1_kerf)
+   side2_kerf = rotate([degToRad(-90), 0, 0], side2_kerf)
+    side1_kerf = translate([0, inside_width * 1.5, 0], side1_kerf);
+    side2_kerf = translate([0, inside_width * 2.5, 0], side2_kerf);
 
     let W = girder_width + kerf;
     let extra_offset = 0;
