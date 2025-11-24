@@ -295,6 +295,7 @@ function buildSides(params, bottom) {
             inside_height / 2 - 2 * material_thickness],
         side1k
     )
+    side1k = subtract(side1k, bottom)
 
     let side2k = translate(
         [0, -inside_width - material_thickness, 0],
@@ -388,7 +389,7 @@ function main(params) {
         let design_type = params.design_type
 
 
-const { bottom_raw: bottom, bottom_kerf: bottom_kerf} = buildBottoms(params)
+let { bottom_raw: bottom, bottom_kerf: bottom_kerf} = buildBottoms(params)
 
 let { side1: side1, side2: side2, side1k: side1_kerf, side2k: side2_kerf} = buildSides(params, bottom)
 
@@ -404,10 +405,6 @@ const back = buildBack(params, bottom, side1, side2)
         girders = girders.map((p, i) =>
             colorize(colorNameToRgb(['red', 'brown', 'crimson', 'darkred'][i]), p));
 
-
-//let { side1: side1_kerf, side2: side2_kerf } = buildSides(params, bottom)
-
-   // let side_kerf = create_side(inside_length, inside_height + 2 * material_thickness, material_thickness, kerf, plate_thickness, girder_width, side_bracket_offset);
    side1_kerf = rotate([degToRad(-90), 0, 0], side1_kerf)
    side2_kerf = rotate([degToRad(-90), 0, 0], side2_kerf)
     side1_kerf = translate([0, inside_width * 1.5, 0], side1_kerf);
@@ -445,7 +442,9 @@ const back = buildBack(params, bottom, side1, side2)
         bottom_girder = colorize(colorNameToRgb('blueviolet'), bottom_girder);
 
     if (model_view === 1) {
-
+bottom = colorize(colorNameToRgb('yellow'), bottom);
+side1 = colorize(colorNameToRgb('teal'), side1);
+side2 = colorize(colorNameToRgb('teal'), side2);
         return [bottom, side1, side2, front, back, girders]
 
     } else if (model_view === 2) {
@@ -481,7 +480,7 @@ function getParameterDefinitions() {
             caption: 'design type:',
             values: [1, 2, 3],
             captions: ['drawer 1', 'drawer 2', 'box 3'],
-            initial: 1
+            initial: 2
         },{
             name: 'inside_width',
             type: 'number',
