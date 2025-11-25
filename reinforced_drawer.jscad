@@ -104,7 +104,7 @@ function create_bottom_with_slot(length, width, thickness, num_pegs, peg_width, 
     let bot_plate = cuboid({
         size: [length, width, thickness]
     });
-    let bot_fingers = union(make_pegs((length - 2 * thickness), (width + 2 * thickness), peg_width, thickness, num_pegs, kerfy));
+    let bot_fingers = union(make_pegs((length - 2 * thickness), (width + 2 * thickness), peg_width, thickness, num_pegs, kerfy, reinforce));
   bot_fingers = translate([ - (length - 2 * thickness) / 2 + peg_width / 2, 0, 0], bot_fingers);
     bottom = union(bot_plate, bot_fingers);
 
@@ -121,13 +121,13 @@ function create_bottom_with_tab(length, width, thickness, num_pegs, peg_width, k
     let bot_plate = cuboid({
         size: [length, width, thickness]
     });
-    let bot_fingers = union(make_pegs(length - 2 * thickness, width + 2 * thickness, peg_width, thickness, num_pegs, kerfy));
+    let bot_fingers = union(make_pegs(length - 2 * thickness, width + 2 * thickness, peg_width, thickness, num_pegs, kerfy, 0));
     bot_fingers = translate([ - (length - 2 * thickness) / 2 + peg_width / 2, 0, 0], bot_fingers);
     bottom = union(bot_plate, bot_fingers);
 
-    let bot_finger_slots = union(make_pegs(width, length + plate_thickness + thickness + 0 * thickness, girder_width + 2 * thickness, thickness, num_pegs, kerfy * 1, plate_thickness, girder_width*0,reinforce));
+    let bot_finger_slots = union(make_pegs(width, length +1* plate_thickness + 1*thickness + 0 * thickness, peg_width, thickness, num_pegs, kerfy, 0));
     bot_finger_slots = rotate([0, 0, degToRad(90)], bot_finger_slots)
-        bot_finger_slots = translate([plate_thickness / 2 - thickness / 2, -width / 2 + girder_width / 2 + thickness, 0], bot_finger_slots);
+        bot_finger_slots = translate([plate_thickness / 2 - thickness / 2, -width / 2 + peg_width / 2, 0], bot_finger_slots);
 
     bottom = union(bottom, bot_finger_slots);
     return bottom;
