@@ -24,16 +24,16 @@ function create_colored_rect(length, width, thickness, color_value) {
     return colorize(colorNameToRgb(color_value), create_rect(length, width, thickness));
 }
 
-function make_pegs(length, width, peg_width, thickness, num_pegs, kerf) {
+function make_pegs(length, width, peg_width, thickness, num_pegs, kerf, reinforce) {
     const pegs = [];
-    const spacing = ((length) - num_pegs * peg_width) / (num_pegs + 1);
+    const spacing = ((length) - num_pegs * peg_width+reinforce/2) / (num_pegs + 1);
 
     for (let i = 0; i < num_pegs; i++) {
         let peg = cuboid({
             size: [peg_width + kerf, width, thickness]
         });
 
-        const x = spacing * (i + 1) + (peg_width) * i;
+        const x = spacing * (i + 1) + (peg_width-reinforce/2) * i;
         peg = translate([x, 0, 0], peg);
 
         pegs.push(peg);
@@ -62,23 +62,44 @@ peggers=union(...pegs);
     return peggers;
 }
 
-function make_peg_slots(length, width, peg_width, thickness, num_pegs, kerf, plate_thickness, cutout_width) {
-    let pegs = make_pegs(length, width, peg_width, thickness, num_pegs, kerf);
-   // pegs = union(pegs);
 
-    let cutout = make_pegs_extra(length, thickness, peg_width, thickness + 6, num_pegs, 0, cutout_width);
+function make_peg_slots(length, width, peg_width, thickness, num_pegs, kerf,
+                        plate_thickness, cutout_width, reinforce) {
+
+    // --- MAIN PEGS ---
+    let pegs = make_pegs(
+        length,
+        width + reinforce,
+        peg_width + reinforce,
+        thickness,
+        num_pegs,
+        kerf,
+      reinforce
+    )
+    pegs = translate([reinforce / 2, 0, 0], pegs)   // center correction
+
+
+    // --- SLOT CUTOUTS ---
+    let cutout = make_pegs_extra(
+        length,
+        thickness,
+        peg_width,
+        thickness + 6,
+        num_pegs,
+        0,
+        cutout_width
+    )
 
     let cutout2 = translate([0, -width / 2 + thickness / 2 + thickness, 0], cutout);
     cutout = translate([0, width / 2 - thickness / 2 - thickness, 0], cutout);
     cutout = union(cutout, cutout2);
     pegs = subtract(pegs, cutout);
-//pegs = union(...pegs);
-    return pegs;
+
+    return pegs
 }
 
 
-
-function create_bottom_with_slot(length, width, thickness, num_pegs, peg_width, kerfy, plate_thickness, girder_width) {
+function create_bottom_with_slot(length, width, thickness, num_pegs, peg_width, kerfy, plate_thickness, girder_width, reinforce) {
 
     let bot_plate = cuboid({
         size: [length, width, thickness]
@@ -87,7 +108,7 @@ function create_bottom_with_slot(length, width, thickness, num_pegs, peg_width, 
   bot_fingers = translate([ - (length - 2 * thickness) / 2 + peg_width / 2, 0, 0], bot_fingers);
     bottom = union(bot_plate, bot_fingers);
 
-    let bot_finger_slots = make_peg_slots(width, length + plate_thickness + thickness + 4 * thickness, girder_width + 2 * thickness, thickness, 1, kerfy * 1, plate_thickness, girder_width);
+    let bot_finger_slots = make_peg_slots(width, length + plate_thickness + thickness + 4 * thickness, girder_width + 2 * thickness, thickness, 1, kerfy * 1, plate_thickness, girder_width, reinforce);
     bot_finger_slots = rotate([0, 0, degToRad(90)], bot_finger_slots)
         bot_finger_slots = translate([plate_thickness / 2 - thickness / 2, -width / 2 + girder_width / 2 + thickness, 0], bot_finger_slots);
 
@@ -95,7 +116,7 @@ function create_bottom_with_slot(length, width, thickness, num_pegs, peg_width, 
     return bottom;
 }
 
-function create_bottom_with_tab(length, width, thickness, num_pegs, peg_width, kerfy, plate_thickness, girder_width) {
+function create_bottom_with_tab(length, width, thickness, num_pegs, peg_width, kerfy, plate_thickness, girder_width, reinforce) {
 
     let bot_plate = cuboid({
         size: [length, width, thickness]
@@ -104,7 +125,7 @@ function create_bottom_with_tab(length, width, thickness, num_pegs, peg_width, k
     bot_fingers = translate([ - (length - 2 * thickness) / 2 + peg_width / 2, 0, 0], bot_fingers);
     bottom = union(bot_plate, bot_fingers);
 
-    let bot_finger_slots = union(make_peg_slots(width, length + plate_thickness + thickness + 0 * thickness, girder_width + 2 * thickness, thickness, num_pegs, kerfy * 1, plate_thickness, girder_width*0));
+    let bot_finger_slots = union(make_pegs(width, length + plate_thickness + thickness + 0 * thickness, girder_width + 2 * thickness, thickness, num_pegs, kerfy * 1, plate_thickness, girder_width*0,reinforce));
     bot_finger_slots = rotate([0, 0, degToRad(90)], bot_finger_slots)
         bot_finger_slots = translate([plate_thickness / 2 - thickness / 2, -width / 2 + girder_width / 2 + thickness, 0], bot_finger_slots);
 
@@ -112,7 +133,7 @@ function create_bottom_with_tab(length, width, thickness, num_pegs, peg_width, k
     return bottom;
 }
 
-function create_side(length, width, thickness, kerf, plate_thickness, girder_width, offset) {
+function create_side(length, width, thickness, kerf, plate_thickness, girder_width, offset, reinforce) {
 
     //let side_plate = create_colored_rect(length, width, thickness, "teal");
     
@@ -120,7 +141,7 @@ function create_side(length, width, thickness, kerf, plate_thickness, girder_wid
         size: [length, width, thickness]
     });
 
-    let side_finger_slots = make_peg_slots(width, length + plate_thickness + thickness + 4 * thickness, girder_width + 2 * thickness, thickness, 2, kerf, plate_thickness, girder_width);
+    let side_finger_slots = make_peg_slots(width, length + plate_thickness + thickness + 4 * thickness, girder_width + 2 * thickness, thickness, 2, kerf, plate_thickness, girder_width,reinforce);
     side_finger_slots = rotate([0, 0, degToRad(90)], side_finger_slots)
         side_finger_slots = translate([plate_thickness / 2 - thickness / 2, -width / 2 + girder_width / 2 + thickness - offset, 0], side_finger_slots);
 
@@ -178,7 +199,8 @@ function buildBottoms(params) {
         width_fingers,
         kerf,
         plate_thickness,
-        girder_width
+        girder_width,
+      bracket_reinforce
     } = params
 
     const maker =
@@ -194,7 +216,8 @@ function buildBottoms(params) {
         width_fingers,
         0,
         plate_thickness,
-        girder_width
+        girder_width,
+      bracket_reinforce
     )
 
     let bottom_kerf = maker(
@@ -205,7 +228,8 @@ function buildBottoms(params) {
         width_fingers,
         kerf,
         plate_thickness,
-        girder_width
+        girder_width,
+      bracket_reinforce
     )
 
 return {bottom_raw, bottom_kerf}
@@ -221,7 +245,8 @@ function buildSideBase(params) {
         kerf,
         plate_thickness,
         girder_width,
-        side_bracket_offset
+        side_bracket_offset,
+      bracket_reinforce
     } = params
 
     let s = create_side(
@@ -231,7 +256,8 @@ function buildSideBase(params) {
         kerf,
         plate_thickness,
         girder_width,
-        side_bracket_offset
+        side_bracket_offset,
+      bracket_reinforce
     )
 
     // orient vertically
@@ -251,7 +277,8 @@ function buildSides(params, bottom) {
         kerf,
         plate_thickness,
         girder_width,
-        side_bracket_offset
+        side_bracket_offset,
+      bracket_reinforce
     } = params
 
     // --- RAW SIDES ---
@@ -262,7 +289,8 @@ function buildSides(params, bottom) {
         0,                      // no kerf
         plate_thickness,
         girder_width,
-        side_bracket_offset
+        side_bracket_offset,
+      bracket_reinforce
     )
     side1 = rotate([degToRad(90), 0, 0], side1)
     side1 = rotate([degToRad(180), 0, 0], side1)
@@ -286,7 +314,8 @@ function buildSides(params, bottom) {
         kerf,                   // <--- kerf version
         plate_thickness,
         girder_width,
-        side_bracket_offset
+        side_bracket_offset,
+      bracket_reinforce
     )
     side1k = rotate([degToRad(90), 0, 0], side1k)
     side1k = rotate([degToRad(180), 0, 0], side1k)
@@ -383,6 +412,7 @@ function main(params) {
         let width_fingers = params.width_fingers
         let girder_width = params.girder_width
         let side_bracket_offset = params.side_bracket_offset
+        let  bracket_reinforce = params.bracket_reinforce
 
         // view transform
         let model_view = params.model_view
@@ -567,6 +597,12 @@ function getParameterDefinitions() {
             caption: 'side bracket offset mm',
         default:
             8
+        }, {
+            name: 'bracket_reinforce',
+            type: 'number',
+            caption: 'bracket extra mm',
+        default:
+            3
         }
     ]
 }
